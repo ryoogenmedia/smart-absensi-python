@@ -1,0 +1,5 @@
+1. python -m pip install mysql-connector-python
+2. python -m pip install --user opencv-contrib-python
+3. pip install numpy
+4. pip install pillow
+5. python -m pip install requests

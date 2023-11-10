@@ -8,6 +8,7 @@ import mysql.connector
 import requests
 import datetime
 import time
+import csv
 
 def rekamDataWajah():
     if entry1.get() == "" or entry2.get() == "" or entry3.get() == "":
@@ -106,29 +107,78 @@ def absensiWajah():
             nama, nis, kelas = data  # Memisahkan data menjadi variabel terpisah
             nama = '' + ''.join(nama) # Mengambil data variabel berupa nama untuk di tampilkan ketika wajah terkenali
             time_stamp = datetime.datetime.now().strftime('%H:%M')
+            jam_masuk = ["06:00","07:00"]
+            status1 = "Tepat Waktu"
+            status2 = "Terlambat"
+            status3 = "Pembelajaran Selesai"
             # Warna hijau jika akurasi lebih dari 74
             if confidence > 74:
-                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Ganti warna kotak menjadi hijau jika wajah terkenali
-                cv2.putText(img, f"{nama} ({confidence}%)", (x, y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)  # Teks hijau jika wajah terkenali
-                cv2.putText(img, "Absen Berhasil", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)  # Teks tambahan untuk pengenalan yang berhasil
-                # Simpan gambar wajah yang terdeteksi
-                if cv2.waitKey(1) == ord(' '):
-                    lebar_target = 300
-                    wajah_terdeteksi = img[y:y+h, x:x+w]
-                    perubahan = lebar_target / wajah_terdeteksi.shape[1]
-                    wajah_terdeteksi = cv2.resize(wajah_terdeteksi, (lebar_target, int(h * perubahan)))
-                    # Simpan gambar wajah sebagai file sementara
-                    temp_image_path = 'wajah_terdeteksi.jpg'
-                    cv2.imwrite(temp_image_path, wajah_terdeteksi)
-                    # Kirim gambar wajah ke Telegram
-                    with open(temp_image_path, 'rb') as wajah_file:
-                        files = {'photo': wajah_file}
-                        caption = f'Nama : {nama} \nNIS : {nis} \nKelas : {kelas} \nPukul : {time_stamp}'
-                        data = {'chat_id': chat_id, 'caption': caption}
-                        response = requests.post(f'https://api.telegram.org/bot{token}/sendPhoto', data=data, files=files)
-                    # Hapus file sementara setelah data berhasil di kirim ke telegram
-                    os.remove(temp_image_path)
-            else:
+                    cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Ganti warna kotak menjadi hijau jika wajah terkenali
+                    cv2.putText(img, f"{nama} ({confidence}%)", (x, y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)  # Teks hijau jika wajah terkenali
+                    cv2.putText(img, "Absen Berhasil", (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)  # Teks tambahan untuk pengenalan yang berhasil
+            if confidence > 77:
+                    if "06:00" in jam_masuk : 
+                        if time_stamp <= "07:30" and time_stamp >= "04:00":
+                            lebar_target = 300
+                            wajah_terdeteksi = img[y:y+h, x:x+w]
+                            perubahan = lebar_target / wajah_terdeteksi.shape[1]
+                            wajah_terdeteksi = cv2.resize(wajah_terdeteksi, (lebar_target, int(h * perubahan)))
+                            # Simpan gambar wajah sebagai file sementara
+                            temp_image_path = 'wajah_terdeteksi.jpg'
+                            cv2.imwrite(temp_image_path, wajah_terdeteksi)
+                            # Kirim gambar wajah ke Telegram
+                            with open(temp_image_path, 'rb') as wajah_file:
+                                files = {'photo': wajah_file}
+                                caption = f'Nama : {nama} \nNIS : {nis} \nKelas : {kelas} \nStatus : {status1} \nWaktu Masuk : {time_stamp}'
+                                data = {'chat_id': chat_id, 'caption': caption}
+                                response = requests.post(f'https://api.telegram.org/bot{token}/sendPhoto', data=data, files=files)
+                            # Hapus file sementara setelah data berhasil di kirim ke telegram
+                            os.remove(temp_image_path)
+                            with open("RekapAbsensi.csv", "a", newline="") as f:
+                                    writer = csv.writer(f)
+                                    writer.writerow([nama, kelas, nis, status1, time_stamp])
+                                    time.sleep(2)
+                        elif time_stamp > "07:30":
+                            lebar_target = 300
+                            wajah_terdeteksi = img[y:y+h, x:x+w]
+                            perubahan = lebar_target / wajah_terdeteksi.shape[1]
+                            wajah_terdeteksi = cv2.resize(wajah_terdeteksi, (lebar_target, int(h * perubahan)))
+                            # Simpan gambar wajah sebagai file sementara
+                            temp_image_path = 'wajah_terdeteksi.jpg'
+                            cv2.imwrite(temp_image_path, wajah_terdeteksi)
+                            # Kirim gambar wajah ke Telegram
+                            with open(temp_image_path, 'rb') as wajah_file:
+                                files = {'photo': wajah_file}
+                                caption = f'Nama : {nama} \nNIS : {nis} \nKelas : {kelas} \nStatus : {status2} \n Waktu Masuk : {time_stamp}'
+                                data = {'chat_id': chat_id, 'caption': caption}
+                                response = requests.post(f'https://api.telegram.org/bot{token}/sendPhoto', data=data, files=files)
+                            # Hapus file sementara setelah data berhasil di kirim ke telegram
+                            os.remove(temp_image_path)
+                            with open("RekapAbsensi.csv", "a", newline="") as f:
+                                    writer = csv.writer(f)
+                                    writer.writerow([nama, kelas, nis, status2, time_stamp])
+                                    time.sleep(2)
+                        elif time_stamp >= "03:00":
+                            lebar_target = 300
+                            wajah_terdeteksi = img[y:y+h, x:x+w]
+                            perubahan = lebar_target / wajah_terdeteksi.shape[1]
+                            wajah_terdeteksi = cv2.resize(wajah_terdeteksi, (lebar_target, int(h * perubahan)))
+                            # Simpan gambar wajah sebagai file sementara
+                            temp_image_path = 'wajah_terdeteksi.jpg'
+                            cv2.imwrite(temp_image_path, wajah_terdeteksi)
+                            # Kirim gambar wajah ke Telegram
+                            with open(temp_image_path, 'rb') as wajah_file:
+                                files = {'photo': wajah_file}
+                                caption = f'Nama : {nama} \nNIS : {nis} \nKelas : {kelas} \nStatus :  {status3} \nWaktu Pulang : {time_stamp}'
+                                data = {'chat_id': chat_id, 'caption': caption}
+                                response = requests.post(f'https://api.telegram.org/bot{token}/sendPhoto', data=data, files=files)
+                            # Hapus file sementara setelah data berhasil di kirim ke telegram
+                            os.remove(temp_image_path)
+                            with open("RekapAbsensi.csv", "a", newline="") as f:
+                                    writer = csv.writer(f)
+                                    writer.writerow([nama, kelas, nis, status3, time_stamp])
+                                    time.sleep(2)
+            elif confidence < 74:
                  cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Ganti warna kotak menjadi merah jika wajah tidak terkenali
                  cv2.putText(img, f"Wajah tidak di kenali!! ({confidence}%)", (x, y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)  # Teks merah jika wajah tidak terkenali
                  coords=[x,y,w,h]
